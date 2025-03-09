@@ -20,7 +20,7 @@
     <livewire:why-us />
 
 {{--    <livewire:work />--}}
-    <livewire:testimonials />
+{{--    <livewire:testimonials />--}}
     <livewire:services />
     <livewire:footer />
     </body>

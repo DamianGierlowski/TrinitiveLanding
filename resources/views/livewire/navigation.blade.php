@@ -4,7 +4,7 @@
         <div class="space-x-6">
             <a href="#about" class="hover:text-gray-500">About</a>
             <a href="#services" class="hover:text-gray-500">Services</a>
-            <a href="#portfolio" class="hover:text-gray-500">Portfolio</a>
+{{--            <a href="#portfolio" class="hover:text-gray-500">Portfolio</a>--}}
             <a href="#contact" class="hover:text-gray-500">Contact</a>
         </div>
     </div>
