@@ -107,8 +107,13 @@
                 </div>
             </div>
 
-            <!-- Copyright -->
-            <div class="mt-12 pt-8 border-t border-gray-800 text-center text-gray-400">
+            <!-- Legal Links -->
+            <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
+                <div class="flex flex-wrap justify-center gap-4 mb-4">
+                    <a href="{{ route('privacy.policy') }}" class="hover:text-white">Privacy Policy</a>
+                    <span>|</span>
+                    <a href="{{ route('cookie.policy') }}" class="hover:text-white">Cookie Policy</a>
+                </div>
                 <p>&copy; 2025 Trinitive. All rights reserved.</p>
             </div>
         </div>

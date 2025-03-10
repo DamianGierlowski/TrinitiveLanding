@@ -1,7 +1,7 @@
-<section class="w-full px-6 flex items-center" style="min-height: 100vh;">
+<section class="w-full px-6 flex items-center" style="min-height: 80vh;">
     <div class="container mx-auto py-32">
         <div class="max-w-3xl">
-            <h1 class="text-5xl font-bold leading-tight mb-6">We create innovative IT solutions for your business</h1>
+            <h1 class="text-5xl font-bold leading-tight mb-6">We create innovative <span style="color:#6366F1">IT</span> solutions for your business</h1>
             <p class="text-lg mb-10">
                 Trinitive is a software house specializing in web, mobile, and cloud applications that transform businesses through technology.
             </p>

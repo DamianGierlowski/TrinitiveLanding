@@ -6,7 +6,11 @@
             <div>
                 <h3 class="text-xl font-bold mb-4">Our Story</h3>
                 <p class="text-gray-700">
-                    Founded in 2020, Trinitive has grown from a small team of developers to a full-service software house, delivering cutting-edge solutions to businesses worldwide.
+                    Founded in 2025, Trinitive is a forward-thinking software development company dedicated to building innovative and efficient digital solutions.
+                </p>
+                <br>
+                <p class="text-gray-700">
+                    At Trinitive, we believe in the power of technology to transform industries. Whether developing scalable SaaS platforms, optimizing workflows, or creating intuitive user experiences, we focus on delivering high-quality, reliable, and modern software solutions.
                 </p>
             </div>
 
