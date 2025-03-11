@@ -4,7 +4,7 @@ FROM php:8.3-fpm-alpine
 # Set working directory
 WORKDIR /var/www
 
-# Install dependencies (using apk instead of apt-get)
+# Install dependencies (use apk instead of apt-get)
 RUN apk update && apk add --no-cache \
     build-base \
     libpng-dev \
@@ -15,7 +15,11 @@ RUN apk update && apk add --no-cache \
     vim \
     unzip \
     git \
-    curl
+    curl \
+    autoconf \
+    pkgconf \
+    libzip-dev \
+    oniguruma-dev
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
