@@ -1,29 +1,31 @@
 # Base image
 FROM php:8.3-fpm-alpine
-
-# Set working directory
-WORKDIR /var/www/html
-
-# Install dependencies
-RUN apk add --no-cache \
-    zip unzip curl git bash \
-    libpng-dev libjpeg-turbo-dev freetype-dev \
+# Install common php extension dependencies
+RUN apt-get update && apt-get install -y \
+    libfreetype-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
+    zlib1g-dev \
+    libzip-dev \
+    unzip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql gd
+    && docker-php-ext-install -j$(nproc) gd \
+    && docker-php-ext-install zip
 
-# Install Composer
-COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
+# Set the working directory
+COPY . /var/www/app
+WORKDIR /var/www/app
 
-# Copy application files
-COPY . .
+RUN chown -R www-data:www-data /var/www/app \
+    && chmod -R 775 /var/www/app/storage
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# install composer
+COPY --from=composer:2.6.5 /usr/bin/composer /usr/local/bin/composer
 
-# Expose port
-EXPOSE 9000
+# copy composer.json to workdir & install dependencies
+COPY composer.json ./
+RUN composer install
 
+# Set the default command to run php-fpm
 CMD ["php-fpm"]
