@@ -1,3 +1,42 @@
+#
+# PHP Dependencies
+#
+FROM composer:2.0 as vendor
+
+WORKDIR /app
+
+COPY database/ database/
+COPY composer.json composer.json
+COPY composer.lock composer.lock
+
+RUN composer install \
+    --no-interaction \
+    --no-plugins \
+    --no-scripts \
+    --no-dev \
+    --prefer-dist
+
+COPY . .
+RUN composer dump-autoload
+
+#
+# Frontend
+#
+FROM node:14.9 as frontend
+
+WORKDIR /app
+
+COPY artisan package.json webpack.mix.js yarn.lock tailwind.js ./
+
+RUN npm install
+
+COPY resources/js ./resources/js
+COPY resources/sass ./resources/sass
+
+RUN npm run production
+
+
+
 # Base image
 FROM php:8.3-fpm-alpine
 
@@ -30,6 +69,20 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 
 # Add user for Laravel application
 RUN addgroup -g 1000 www && adduser -D -u 1000 -G www www
+
+# Copy Frontend build
+COPY --from=frontend /app/node_modules/ ./node_modules/
+COPY --from=frontend /app/public/js/ ./public/js/
+COPY --from=frontend /app/public/css/ ./public/css/
+COPY --from=frontend /app/public/mix-manifest.json ./public/mix-manifest.json
+
+# Copy Composer dependencies
+COPY --from=vendor /app/vendor/ ./vendor/
+COPY . .
+
+RUN php artisan config:cache
+RUN php artisan route:cache
+
 
 # Copy existing application directory contents
 COPY . /var/www
