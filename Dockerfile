@@ -1,98 +1,69 @@
-#
-# PHP Dependencies
-#
-FROM composer:2.0 as vendor
+# Stage 1: Base Image for PHP
+FROM serversideup/php:8.4-fpm as base
 
-WORKDIR /app
+# Switch to root to install system dependencies
+USER root
 
-COPY database/ database/
-COPY composer.json composer.json
-COPY composer.lock composer.lock
-
-RUN composer install \
-    --no-interaction \
-    --no-plugins \
-    --no-scripts \
-    --no-dev \
-    --prefer-dist
-
-COPY . .
-RUN composer dump-autoload
-
-#
-# Frontend
-#
-FROM node:14.9 as frontend
-
-WORKDIR /app
-
-COPY artisan package.json webpack.mix.js yarn.lock tailwind.js ./
-
-RUN npm install
-
-COPY resources/js ./resources/js
-COPY resources/sass ./resources/sass
-
-RUN npm run production
-
-
-
-# Base image
-FROM php:8.3-fpm-alpine
-
-# Set working directory
-WORKDIR /var/www
-
-# Install dependencies (use apk instead of apt-get)
-RUN apk update && apk add --no-cache \
-    build-base \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    zip \
-    jpegoptim optipng pngquant gifsicle \
-    vim \
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
     unzip \
     git \
     curl \
-    autoconf \
-    pkgconf \
-    libzip-dev \
-    oniguruma-dev
+    && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo_mysql mbstring zip exif pcntl
+# Switch back to non-root user (for security)
+USER www-data
 
-# Install composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Stage 2: Build Backend (Composer)
+FROM base as backend
 
-# Add user for Laravel application
-RUN addgroup -g 1000 www && adduser -D -u 1000 -G www www
+# Copy composer files
+COPY composer.json composer.lock ./
 
-# Copy Frontend build
-COPY --from=frontend /app/node_modules/ ./node_modules/
-COPY --from=frontend /app/public/js/ ./public/js/
-COPY --from=frontend /app/public/css/ ./public/css/
-COPY --from=frontend /app/public/mix-manifest.json ./public/mix-manifest.json
+# Install dependencies
+RUN composer install --no-dev --no-scripts --optimize-autoloader
 
-# Copy Composer dependencies
-COPY --from=vendor /app/vendor/ ./vendor/
+# Stage 3: Build Frontend (Node.js)
+FROM node:20-alpine as frontend
+
+WORKDIR /app
+
+# Copy package files first to leverage Docker cache
+COPY package.json package-lock.json ./
+
+# Install ALL dependencies (including devDependencies, so Vite is available)
+RUN npm install
+
+# Copy the rest of the frontend source code
+COPY resources resources
+COPY vite.config.js vite.config.js
+
+# Build frontend
+RUN npm run build
+
+# Stage 4: Final Image
+FROM base as final
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy Laravel app from backend stage
+COPY --from=backend /var/www/html /var/www/html
+
+# Copy built frontend assets
+COPY --from=frontend /app/public /var/www/html/public
+
+# Copy application files
 COPY . .
 
-RUN php artisan config:cache
-RUN php artisan route:cache
+# Set permissions for storage and bootstrap/cache
+# Set correct permissions for Laravel
+USER root
+RUN chown -R www-data:www-data storage bootstrap/cache
+USER www-data
 
 
-# Copy existing application directory contents
-COPY . /var/www
-
-# Copy existing application directory permissions
-COPY --chown=www:www . /var/www
-
-# Change current user to www
-USER www
-
-# Expose port 9000 and start php-fpm server
+# Expose port
 EXPOSE 9000
+
 CMD ["php-fpm"]
